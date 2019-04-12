@@ -27,16 +27,23 @@ typedef struct urlinfo_t {
 */
 urlinfo_t *parse_url(char *url)
 {
-  // copy the input URL so as not to mutate the original
-  char *hostname = strdup(url);
+  char *hostname;
   char *port;
   char *path;
 
-  printf("%s", hostname);
-
   urlinfo_t *urlinfo = malloc(sizeof(urlinfo_t));
 
+  // Check for https:// or http://
   char *temp;
+  temp = strstr(url, "://");
+  if (temp != NULL) {
+    temp += 3;
+  } else {
+    temp = url;
+  }
+
+  // Copy the input URL so as not to mutate the original
+  hostname = strdup(temp);
   // Use strchr to find the first backslash in the URL (this is assuming there is no http:// or https:// in the URL).
   temp = strchr(hostname, '/');
   // Set the path pointer to 1 character after the spot returned by strchr.
@@ -45,10 +52,16 @@ urlinfo_t *parse_url(char *url)
   *temp = '\0';
   // Use strchr to find the first colon in the URL.
   temp = strchr(hostname, ':');
-  // Set the port pointer to 1 character after the spot returned by strchr.
-  port = temp + 1;
-  // Overwrite the colon with a '\0' so that we are just left with the hostname.
-  *temp = '\0';
+
+  // Make port 80 the default.
+  if (temp == NULL) {
+    port = "80";
+  } else {
+    // Set the port pointer to 1 character after the spot returned by strchr.
+    port = temp + 1;
+    // Overwrite the colon with a '\0' so that we are just left with the hostname.
+    *temp = '\0';
+  }
 
   urlinfo->hostname = hostname;
   urlinfo->port = port;
