@@ -32,6 +32,8 @@ urlinfo_t *parse_url(char *url)
   char *port;
   char *path;
 
+  printf("%s", hostname);
+
   urlinfo_t *urlinfo = malloc(sizeof(urlinfo_t));
 
   char *temp;
@@ -46,7 +48,7 @@ urlinfo_t *parse_url(char *url)
   // Set the port pointer to 1 character after the spot returned by strchr.
   port = temp + 1;
   // Overwrite the colon with a '\0' so that we are just left with the hostname.
-  temp = '\0';
+  *temp = '\0';
 
   urlinfo->hostname = hostname;
   urlinfo->port = port;
@@ -96,17 +98,21 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  /*
-    1. Parse the input URL
-    2. Initialize a socket by calling the `get_socket` function from lib.c
-    3. Call `send_request` to construct the request and send it
-    4. Call `recv` in a loop until there is no more data to receive from the server. Print the received response to stdout.
-    5. Clean up any allocated memory and open file descriptors.
-  */
+  // Parse the input URL
+  urlinfo_t *urlinfo = parse_url(argv[1]);
+  // Initialize a socket by calling the `get_socket` function from lib.c
+  sockfd = get_socket(urlinfo->hostname, urlinfo->port);
+  // Call `send_request` to construct the request and send it
+  send_request(sockfd, urlinfo->hostname, urlinfo->port, urlinfo->path);
+  // Call `recv` in a loop until there is no more data to receive from the server. Print the received response to stdout.
+  while(recv(sockfd, buf, sizeof buf, 0) > 0) {
+    fprintf(stdout, "%s", buf);
+  }
 
-  ///////////////////
-  // IMPLEMENT ME! //
-  ///////////////////
+  // Clean up any allocated memory and open file descriptors.
+  free(urlinfo->hostname);
+  free(urlinfo);
+  close(sockfd);
 
   return 0;
 }
